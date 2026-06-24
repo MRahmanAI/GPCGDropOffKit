@@ -86,6 +86,46 @@
   .progress-bar-wrap {
     max-width: 640px;
     margin: 0 auto 28px;
+    transition: none;
+  }
+
+  .progress-bar-wrap.sticky {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    max-width: 100%;
+    margin: 0;
+    padding: 10px 16px 10px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+
+  .progress-bar-wrap.sticky .progress-label {
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .progress-bar-wrap.sticky .progress-track {
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Spacer shown when bar goes sticky so content doesn't jump */
+  .progress-spacer {
+    display: none;
+    height: 0;
+    margin-bottom: 28px;
+  }
+
+  .progress-spacer.active {
+    display: block;
   }
 
   .progress-label {
@@ -630,7 +670,7 @@
 </div>
 
 <!-- Progress -->
-<div class="progress-bar-wrap">
+<div class="progress-bar-wrap" id="progressBar">
   <div class="progress-label">
     <span>Completion</span>
     <span id="progressPct">0%</span>
@@ -639,6 +679,7 @@
     <div class="progress-fill" id="progressFill"></div>
   </div>
 </div>
+<div class="progress-spacer" id="progressSpacer"></div>
 
 <!-- FORM -->
 <div id="formView">
@@ -1012,6 +1053,33 @@
   document.querySelectorAll('input[name=condition]').forEach(r => {
     r.addEventListener('change', updateProgress);
   });
+
+  // Sticky progress bar on scroll
+  const progressBar = document.getElementById('progressBar');
+  const progressSpacer = document.getElementById('progressSpacer');
+  let progressBarTop = 0;
+
+  function getProgressBarTop() {
+    // Get original position relative to document (not affected by sticky)
+    progressBarTop = progressSpacer.offsetTop || progressBar.offsetTop;
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!progressBarTop) getProgressBarTop();
+    if (window.scrollY > progressBarTop) {
+      if (!progressBar.classList.contains('sticky')) {
+        const barHeight = progressBar.offsetHeight;
+        progressBar.classList.add('sticky');
+        progressSpacer.style.height = barHeight + 'px';
+        progressSpacer.classList.add('active');
+      }
+    } else {
+      progressBar.classList.remove('sticky');
+      progressSpacer.classList.remove('active');
+    }
+  }, { passive: true });
+
+  window.addEventListener('load', getProgressBarTop);
 
   function showError(id, show) {
     const el = document.getElementById('err-' + id);
